@@ -1,124 +1,97 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
+import { BingoSizeSelection } from "./components/BingoSizeSelection.jsx";
+import { allowedGridSizes } from "./const.js";
+import { BingoGrid } from "./components/BingoGrid.jsx";
+import { EditModeSwitch } from "./components/EditModeSwitch.jsx";
+import { range } from "./utils.js";
 
-function App() {
+const Header = () => {
+  return (
+    <h1 className="text-2xl uppercase py-3 fixed top-0 left-0 right-0">
+      Bingo
+    </h1>
+  );
+};
+
+const App = () => {
+  const [size, setSize] = useState(allowedGridSizes[0]);
+  const [items, setItems] = useState([]);
+  const [editable, setEditable] = useState(true);
+
+  useEffect(() => {
+    if (editable) {
+      // Uncheck all cells
+      setItems((current) =>
+        current.map((row) => row.map((cell) => ({ ...cell, checked: false })))
+      );
+    }
+  }, [editable, setItems]);
+
+  useEffect(() => {
+    setItems((current) => {
+      return range(size).map((y) =>
+        range(size).map((x) => {
+          const original = current?.[y]?.[x];
+          return {
+            value: original?.value ?? null,
+            checked: original?.checked ?? false,
+          };
+        })
+      );
+    });
+  }, [size]);
+
+  const updateCellValue = useCallback(
+    (updatedCellX, updatedCellY, value) => {
+      setItems((current) =>
+        current.map((row, y) =>
+          row.map((cell, x) => {
+            return {
+              ...cell,
+              value:
+                y === updatedCellY && x === updatedCellX ? value : cell.value,
+            };
+          })
+        )
+      );
+    },
+    [setItems]
+  );
+
+  const toggleCellChecked = useCallback(
+    (updatedCellX, updatedCellY) => {
+      setItems((current) =>
+        current.map((row, y) =>
+          row.map((cell, x) => {
+            return {
+              ...cell,
+              checked:
+                y === updatedCellY && x === updatedCellX
+                  ? !cell.checked
+                  : cell.checked,
+            };
+          })
+        )
+      );
+    },
+    [setItems]
+  );
+
   return (
     <>
       <Header />
-      <BingoGrid />
-    </>
-  );
-}
-
-function Header() {
-  return (
-    <h1 className="text-2xl uppercase py-3 fixed top-0 left-0 right-0">
-      bingo
-    </h1>
-  );
-}
-
-function GridSize({ currentGridNumber, updateGrid, setGridNumber }) {
-  const handleGridSizeChange = (e) => {
-    setGridNumber(Number(e.target.value));
-  };
-
-  return (
-    <div className="flex flex-row gap-3 content-center py-5 items-center place-content-center">
-      <h2>Zvol X, aby Bingo bylo X krát X</h2>
-      <select value={currentGridNumber} onChange={handleGridSizeChange}>
-        {[3, 4, 5].map((num) => (
-          <option value={num} key={num}>
-            {num}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={(e) => {
-          updateGrid();
-        }}
-        className="bg-white text-black"
-      >
-        Confirm
-      </button>
-    </div>
-  );
-}
-
-function BingoGrid() {
-  const [boxGrid, setBoxGrid] = useState([]);
-  const [colSize, setColSize] = useState(3);
-
-  const changeText = (id, newText) => {
-    setBoxGrid((prevGrid) => {
-      const updatedGrid = prevGrid.map((box) =>
-        box.id === id ? { ...box, text: newText } : box
-      );
-      return updatedGrid;
-    });
-  };
-
-  const createGrid = () => {
-    setBoxGrid([]);
-    const powerNumber = Math.pow(colSize, 2);
-    const boxArray = [];
-    for (let i = 0; i < powerNumber; i++) {
-      boxArray.push({ id: i, text: "", check: false });
-    }
-    setBoxGrid(boxArray);
-  };
-
-  return (
-    <>
-      <GridSize
-        updateGrid={createGrid}
-        currentGridNumber={colSize}
-        setGridNumber={setColSize}
+      <BingoSizeSelection currentSize={size} onSizeChange={setSize} />
+      <BingoGrid
+        size={size}
+        items={items}
+        editable={editable}
+        toggleCellChecked={toggleCellChecked}
+        updateCellValue={updateCellValue}
       />
-      <div className={`grid grid-cols-${colSize} gap-4 rounded-md max-w-full`}>
-        {boxGrid.map((boxData) => {
-          return (
-            <Box
-              key={`box-key-${boxData.id}`}
-              boxData={boxData}
-              changeText={changeText}
-            />
-          );
-        })}
-      </div>
+      <EditModeSwitch current={editable} onChange={setEditable} />
     </>
   );
-}
+};
 
-function Box({ boxData, changeText }) {
-  const [clicked, setClicked] = useState(false);
-
-  const handleInputChange = (e) => {
-    changeText(boxData.id, e.target.value);
-  };
-
-  const handleBoxClick = (e) => {
-    // Check if the click occurred on the input element
-    if (e.target.tagName.toLowerCase() !== "input") {
-      setClicked(!clicked);
-    }
-  };
-
-  return (
-    <div
-      className={`p-3 hover:cursor-pointer rounded-md ${
-        clicked ? "bg-green-500" : "bg-white"
-      }`}
-      onClick={handleBoxClick}
-    >
-      <input
-        className="bg-transparent outline outline-1 rounded-md px-3 text-black"
-        type="text"
-        placeholder={`Enter Value for Box ${boxData.id}`}
-        value={boxData.text}
-        onChange={handleInputChange}
-      ></input>
-    </div>
-  );
-}
 export default App;
