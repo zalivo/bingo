@@ -91,14 +91,28 @@ function BingoGrid() {
 }
 
 function Box({ boxData, changeText }) {
+  const [clicked, setClicked] = useState(false);
+
   const handleInputChange = (e) => {
     changeText(boxData.id, e.target.value);
   };
 
+  const handleBoxClick = (e) => {
+    // Check if the click occurred on the input element
+    if (e.target.tagName.toLowerCase() !== "input") {
+      setClicked(!clicked);
+    }
+  };
+
   return (
-    <div className=" bg-white text-black p-3 hover:cursor-pointer rounded-md">
+    <div
+      className={`p-3 hover:cursor-pointer rounded-md ${
+        clicked ? "bg-green-500" : "bg-white"
+      }`}
+      onClick={handleBoxClick}
+    >
       <input
-        className="bg-transparent outline outline-1 rounded-md px-3"
+        className="bg-transparent outline outline-1 rounded-md px-3 text-black"
         type="text"
         placeholder={`Enter Value for Box ${boxData.id}`}
         value={boxData.text}
