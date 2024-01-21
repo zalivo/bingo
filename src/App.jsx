@@ -19,13 +19,14 @@ function Header() {
 }
 
 function GridSize({ currentGridNumber, updateGrid, setGridNumber }) {
+  const handleGridSizeChange = (e) => {
+    setGridNumber(Number(e.target.value));
+  };
+
   return (
-    <div className="flex flex-row gap-3 content-center py-5 items-center">
-      <h2>Kolik polí má mít Bingo?</h2>
-      <select
-        value={currentGridNumber}
-        onChange={(e) => setGridNumber(Number(e.target.value))}
-      >
+    <div className="flex flex-row gap-3 content-center py-5 items-center place-content-center">
+      <h2>Zvol X, aby Bingo bylo X krát X</h2>
+      <select value={currentGridNumber} onChange={handleGridSizeChange}>
         {[3, 4, 5].map((num) => (
           <option value={num} key={num}>
             {num}
@@ -49,9 +50,12 @@ function BingoGrid() {
   const [colSize, setColSize] = useState(3);
 
   const changeText = (id, newText) => {
-    const arr = boxGrid;
-    arr[id].text = newText;
-    setBoxGrid(arr);
+    setBoxGrid((prevGrid) => {
+      const updatedGrid = prevGrid.map((box) =>
+        box.id === id ? { ...box, text: newText } : box
+      );
+      return updatedGrid;
+    });
   };
 
   const createGrid = () => {
@@ -71,23 +75,34 @@ function BingoGrid() {
         currentGridNumber={colSize}
         setGridNumber={setColSize}
       />
-      <div className={`grid grid-cols-${Math.sqrt(boxGrid.length)} gap-4`}>
+      <div className={`grid grid-cols-${colSize} gap-4 rounded-md max-w-full`}>
         {boxGrid.map((boxData) => {
-          return <Box key={`box-key-${boxData.id}`} boxData={boxData} />;
+          return (
+            <Box
+              key={`box-key-${boxData.id}`}
+              boxData={boxData}
+              changeText={changeText}
+            />
+          );
         })}
       </div>
     </>
   );
 }
 
-function Box({ boxData }) {
+function Box({ boxData, changeText }) {
+  const handleInputChange = (e) => {
+    changeText(boxData.id, e.target.value);
+  };
+
   return (
-    <div className="bg-white text-black p-3 hover:cursor-pointer rounded-md">
+    <div className=" bg-white text-black p-3 hover:cursor-pointer rounded-md">
       <input
         className="bg-transparent outline outline-1 rounded-md px-3"
         type="text"
-        placeholder="Enter Value"
-        value="Nazdar"
+        placeholder={`Enter Value for Box ${boxData.id}`}
+        value={boxData.text}
+        onChange={handleInputChange}
       ></input>
     </div>
   );
