@@ -8,8 +8,8 @@ import { range } from "./utils.js";
 
 const Header = () => {
   return (
-    <h1 className="text-2xl uppercase py-3 fixed top-0 left-0 right-0">
-      Bingo
+    <h1 className="text-4xl uppercase py-3 fixed top-0 left-0 right-0">
+      <a href="/">Bingo</a>
     </h1>
   );
 };
